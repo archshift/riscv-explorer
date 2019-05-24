@@ -1,0 +1,311 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap');
+
+$monospace: "Roboto Mono";
+$color-bg: #F8F8FF;
+$color-font-hard: rgb(20, 16, 43);
+$color-font-soft: #252531;
+$color-midtone: rgb(113, 110, 194);
+$color-lighttone: rgb(224, 223, 243);
+$color-vibrant-blue: #2391ff;
+$color-vibrant-purple: #c123ff;
+$color-vibrant-red: #ff4242;
+
+
+body {
+    background: linear-gradient(135deg, #eff7ff 0%,#fff2f2 100%);
+    color: $color-font-hard;
+    margin: 0;
+    padding: 0;
+}
+
+#content {
+    padding: 10px;
+}
+
+.waitload {
+    visibility: hidden;
+}
+
+#load-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    
+    background-color: #ffffffc0;
+    font-family: $monospace;
+
+    @keyframes grow {
+        0%, 33%, 100% { transform: scale(1); }
+        66%           { transform: scale(1.5); }
+    }
+
+    > * {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+
+        width: 30pt;
+        height: 20pt;
+        font-size: 80pt;
+        line-height: 65pt;
+
+        animation: 2s ease-in-out grow;
+        animation-iteration-count: infinite;
+    }
+    > *::after {
+        content: ".";
+    }
+
+    .ls1 {
+        animation-delay: 0.25s;
+        color: $color-vibrant-blue;
+    }
+    .ls2 {
+        animation-delay: 0.5s;
+        color: $color-vibrant-purple;
+    }
+    .ls3 {
+        animation-delay: 0.75s;
+        color: $color-vibrant-red;
+    }
+}
+
+.decorbar {
+    height: 10px;
+    width: 100%;
+    background: linear-gradient(to right, $color-vibrant-blue 0%,$color-vibrant-red 100%);
+}
+
+h1 {
+    margin: 10px;
+    padding: 0;
+    font-size: 25pt;
+    font-family: $monospace;
+    font-weight: 600;
+    letter-spacing: 20pt;
+    color: $color-font-hard;
+}
+
+%rounded-major {
+    border: 1px solid $color-midtone;
+    border-radius: 2pt;
+}
+
+%rounded-minor {
+    @extend %rounded-major;
+    border-color: $color-lighttone;
+}
+
+
+
+/************************************************************************************
+ *   TEXT WINDOW   ******************************************************************
+ ************************************************************************************/
+#text-regs-vsplit {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+
+#text-regs-vsplit > * {
+    margin: 10px;
+}
+
+#text {
+    @extend %rounded-major;
+
+    flex: 0.7;
+    display: flex;
+    flex-direction: column;
+
+    padding: 2pt;
+}
+
+#dbg-buttons {
+    margin: 2pt;
+}
+
+#dbg-buttons button {
+    @extend %rounded-minor;
+
+    padding: 3pt;
+    margin: 0;
+
+    background: none;
+    background-color: $color-lighttone;
+    color: $color-font-hard;
+}
+
+#dbg-buttons button:hover {
+    background-color: lighten($color-lighttone, 5%);
+}
+
+#dbg-buttons button:active {
+    background-color: darken($color-lighttone, 5%);
+}
+
+#breakable-text {
+    @extend %rounded-minor;
+
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+
+    margin: 2pt;
+}
+
+#bp-box {
+    display: flex;
+    flex-direction: column;
+    background-color: $color-lighttone;
+}
+#bp-box .bp {
+    height: 15pt;
+    width: 15pt;
+    margin: 0;
+    padding: 0;
+}
+
+#bp-box .bp div {
+    width: 40%;
+    height: 40%;
+    margin: 30%;
+    border-radius: 50%;
+}
+#bp-box .bp .disabled {
+    background-color: $color-midtone;
+}
+#bp-box .bp:hover .disabled {
+    background-color: #A0A0A0;
+}
+
+#bp-box .bp .enabled {
+    background-color: red;
+}
+
+
+#text-input {
+    width: 100%;
+    line-height: 15pt;
+    margin: 0 3pt;
+    padding: 0;
+    resize: none;
+
+    border: none;
+
+    background-color: $color-bg;
+    color: $color-font-hard;
+    font-family: $monospace;
+    font-size: 13pt;
+}
+
+
+
+/************************************************************************************
+ *   REGISTERS WINDOW   *************************************************************
+ ************************************************************************************/
+#registers {
+    @extend %rounded-major;
+
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    align-content: center;
+    flex: 0.3;
+    
+    font-family: $monospace;
+    font-size: 11pt;
+
+    padding: 2pt;
+}
+
+#registers .regbox {
+    @extend %rounded-minor;
+
+    min-width: 45%;
+    flex-grow: 1;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 2pt;
+}
+
+#registers .regbox .label {
+    text-align: center;
+    width: 40pt;
+    flex-shrink: 0;
+    flex-grow: 1;
+    
+    background-color: $color-lighttone;
+}
+
+#registers .regbox .val {
+    text-align: center;
+    flex-shrink: 0;
+    flex-grow: 1;
+    width: 80pt;
+
+    color: $color-font-soft;
+}
+
+
+
+/************************************************************************************
+ *   MEMORY WINDOW   ****************************************************************
+ ************************************************************************************/
+#memory {
+    @extend %rounded-major;
+
+    display: flex;
+    flex-direction: column;
+
+    font-family: $monospace;
+    font-size: 11pt;
+
+    margin: 10px;
+    padding: 2pt;
+}
+
+#memory .cacheline {
+    @extend %rounded-minor;
+
+    display: flex;
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: stretch;
+
+    margin: 2pt;
+}
+
+#memory .cacheline .label {
+    text-align: center;
+    width: 60pt;
+    flex-shrink: 0;
+    flex-grow: 1;
+    
+    background-color: $color-lighttone;
+}
+
+#memory .cacheline .data {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    color: $color-font-soft;
+}
+
+#memory .cacheline .data .memword {
+    text-align: center;
+    flex-shrink: 0;
+    width: 60pt;
+}

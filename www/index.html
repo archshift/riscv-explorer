@@ -1,0 +1,182 @@
+<html>
+    <head>
+        <title>RISC-V explorer</title>
+        <link rel="stylesheet" type="text/css" href="style.css" />
+    </head>
+    <body>
+
+        <div class="decorbar"></div>
+        
+        <div id="content">
+            <h1>RISC-V EXPLORER</h1>
+
+            <div id="load-spinner" class="whileload">
+                <div class="ls1"></div>
+                <div class="ls2"></div>
+                <div class="ls3"></div>
+            </div>
+
+            <div id="text-regs-vsplit" class="waitload">
+                <div id="text">
+                    <div id="dbg-buttons">
+                        <button id="btn-run">Run</button>
+                        <button id="btn-step">Step</button>
+                        <button id="btn-reset">Reset</button>
+                    </div>
+                    <div id="breakable-text">
+                        <div id="bp-box" >
+                            <div class="bp"> <div class="enabled"></div> </div>
+                        </div>
+                        <textarea id="text-input" spellcheck="false"></textarea>
+                    </div>
+                </div>
+
+                <div id="registers" >
+                    <div class="regbox">
+                        <div class="label">x0</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x1</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x2</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x3</div>
+                        <div class="val">0</div>
+                    </div>
+
+                    <div class="regbox">
+                        <div class="label">x4</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x5</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x6</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x7</div>
+                        <div class="val">0</div>
+                    </div>
+
+                    <div class="regbox">
+                        <div class="label">x8</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x9</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x10</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x11</div>
+                        <div class="val">0</div>
+                    </div>
+
+                    <div class="regbox">
+                        <div class="label">x12</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x13</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x14</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x15</div>
+                        <div class="val">0</div>
+                    </div>
+
+                    <div class="regbox">
+                        <div class="label">x16</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x17</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x18</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x19</div>
+                        <div class="val">0</div>
+                    </div>
+
+                    <div class="regbox">
+                        <div class="label">x20</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x21</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x22</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x23</div>
+                        <div class="val">0</div>
+                    </div>
+
+                    <div class="regbox">
+                        <div class="label">x24</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x25</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x26</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x27</div>
+                        <div class="val">0</div>
+                    </div>
+
+                    <div class="regbox">
+                        <div class="label">x28</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x29</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x30</div>
+                        <div class="val">0</div>
+                    </div>
+                    <div class="regbox">
+                        <div class="label">x31</div>
+                        <div class="val">0</div>
+                    </div>
+                </div>
+            
+            </div>
+
+
+            <div id="memory" class="waitload">
+            </div>
+        
+        </div>
+            
+        <script type="module" src="behavior.js"></script>
+    </body>
+</html>
