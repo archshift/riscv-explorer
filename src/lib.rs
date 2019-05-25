@@ -8,7 +8,6 @@ pub struct SimState {
     program: interpreter::Program,
     regs: interpreter::Registers,
     mem: memory::Memory,
-    curr_line: usize,
     error: String,
 }
 
@@ -18,7 +17,6 @@ pub fn makeSimstate() -> SimState {
         program: interpreter::Program::new(),
         regs: interpreter::Registers::new(),
         mem: memory::Memory::new(),
-        curr_line: 0,
         error: String::new(),
     }
 }
@@ -47,8 +45,11 @@ pub fn removeBreakpoint(state: &mut SimState, line: usize) {
 }
 
 #[wasm_bindgen]
-pub fn runToBreak(state: &mut SimState) -> bool {
-    while state.curr_line < state.program.code.len() {
+pub fn runAmount(state: &mut SimState, count: usize) -> bool {
+    for _ in 0..count {
+        if state.regs.pc >= state.program.code.len() {
+            break;
+        }
         if !step(state) {
             return false;
         }
@@ -58,19 +59,19 @@ pub fn runToBreak(state: &mut SimState) -> bool {
 
 #[wasm_bindgen]
 pub fn step(state: &mut SimState) -> bool {
-    if state.curr_line >= state.program.code.len() {
+    if state.regs.pc >= state.program.code.len() {
         state.error = "Stepped over end of program!".to_owned();
         return false;
     }
 
-    let inst = &state.program.code[state.curr_line];
-    state.curr_line += 1;
-    if inst.len() == 0 { return true }
-
-    if let Err(what) = interpreter::run(&mut state.regs, &mut state.mem, inst) {
-        state.error = format!("Could not execute `{}`: \"{}\"", inst, what);
+    if let Err(what) = interpreter::run(&mut state.regs, &mut state.mem, &mut state.program) {
+        state.error = format!("Error on line {}, `{}`: \"{}\"",
+            state.regs.pc,
+            state.program.code[state.regs.pc],
+            what);
         return false;
     }
+    state.regs.pc += 1;
 
     true
 }
@@ -78,6 +79,15 @@ pub fn step(state: &mut SimState) -> bool {
 #[wasm_bindgen]
 pub fn getRegs(state: &SimState, regs_out: &mut [u32]) {
     regs_out.copy_from_slice(&state.regs.file);
+}
+
+#[wasm_bindgen]
+pub fn getMem(state: &SimState, mem_out: &mut [u32]) {
+    for (i, line) in state.mem.file.iter().enumerate() {
+        let start = i * 16;
+        let end = (i + 1) * 16;
+        mem_out[start..end].copy_from_slice(&line.data);
+    }
 }
 
 #[wasm_bindgen]

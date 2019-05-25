@@ -10,7 +10,7 @@ use crate::memory::Memory;
 pub(crate) struct Program {
     pub(crate) code: Vec<String>,
     labels: HashMap<String, usize>,
-    breakpoints: HashSet<usize>,
+    breakpoints: HashSet<usize>
 }
 
 impl Program {
@@ -22,18 +22,32 @@ impl Program {
 
 pub(crate) struct Registers {
     pub(crate) file: [u32; 32],
+    pub(crate) pc: usize,
 }
 
 impl Registers {
     pub(crate) fn new() -> Self {
-        Self { file: Default::default() }
+        Self {
+            file: Default::default(),
+            pc: 0
+        }
     }
 }
 
 lazy_static! {
+    static ref PARSER_LABEL: Regex = Regex::new(r"(?x)
+        # LABEL :
+          (\w+) :
+    ").unwrap();
+
     static ref PARSER_TYPE_R: Regex = Regex::new(r"(?x)
         # OPERATOR   RD           RS1         RS2
           (\w+)   \s (\w+),    \s (\w+),   \s (\w+)
+    ").unwrap();
+
+    static ref PARSER_TYPE_J: Regex = Regex::new(r"(?x)
+        # OPERATOR   RD           LABEL
+          (\w+)   \s (\w+),    \s (\w+)
     ").unwrap();
 
     static ref PARSER_TYPE_I: Regex = Regex::new(r"(?x)
@@ -96,18 +110,27 @@ fn immed(field: &str) -> Result<i32, String> {
         .map_err(|_| format!("Could not convert immed `{}` to integer", field))
 }
 
-pub(crate) fn run(regs: &mut Registers, mem: &mut Memory, line: &str) -> Result<(), String> {
+pub(crate) fn run(regs: &mut Registers, mem: &mut Memory, program: &mut Program) -> Result<(), String> {
+    let line = &program.code[regs.pc];
+    if line.len() == 0 { return Ok(()) }
+
     let rtype_caps = PARSER_TYPE_R.captures(line);
+    let jtype_caps = PARSER_TYPE_J.captures(line);
     let itype_caps = PARSER_TYPE_I.captures(line);
     let lstype_caps = PARSER_TYPE_LS.captures(line);
+    let label_caps = PARSER_LABEL.captures(line);
 
     let rtype = rtype_caps.as_ref().ok_or("Could not match r-type fields: <OP> <RD>, <RS1>, <RS2>");
+    let jtype = jtype_caps.as_ref().ok_or("Could not match jal-type fields: <OP> <RD>, <LABEL>");
     let itype = itype_caps.as_ref().ok_or("Could not match i-type fields: <OP> <RD>, <RS1>, <IMM>");
     let lstype = lstype_caps.as_ref().ok_or("Could not match l/s-type fields: <OP> <RD>, <OFFS>(<RA>)");
 
     let r_rd  = || reg(capture_field(rtype?, 2)?);
     let r_rs1 = || reg(capture_field(rtype?, 3)?);
     let r_rs2 = || reg(capture_field(rtype?, 4)?);
+
+    let j_rd  = || reg(capture_field(jtype?, 2)?);
+    let j_lbl = || capture_field(jtype?, 3);
 
     let i_rd    = || reg(capture_field(itype?, 2)?);
     let i_rs1   = || reg(capture_field(itype?, 3)?);
@@ -118,6 +141,12 @@ pub(crate) fn run(regs: &mut Registers, mem: &mut Memory, line: &str) -> Result<
     let ls_ra   = || reg(capture_field(lstype?, 4)?);
 
     let operator = line.split(" ").next().ok_or("Could not find operator!");
+
+    if let Some(ref label) = label_caps {
+        let label_name = capture_field(label, 1)?;
+        program.labels.insert(label_name.to_owned(), regs.pc);
+        return Ok(())
+    }
 
     match operator? {
         // R-TYPE INSTRUCTIONS
@@ -139,6 +168,12 @@ pub(crate) fn run(regs: &mut Registers, mem: &mut Memory, line: &str) -> Result<
         "XOR" => {
             regs.file[r_rd()?] = regs.file[r_rs1()?] ^ regs.file[r_rs2()?];
         }
+        "SLL" => {
+            regs.file[r_rd()?] = regs.file[r_rs1()?] << regs.file[r_rs2()?];
+        }
+        "SLR" => {
+            regs.file[r_rd()?] = regs.file[r_rs1()?] >> regs.file[r_rs2()?];
+        }
 
         // I-TYPE INSTRUCTIONS
         "ADDI" => {
@@ -156,15 +191,29 @@ pub(crate) fn run(regs: &mut Registers, mem: &mut Memory, line: &str) -> Result<
         "XORI" => {
             regs.file[i_rd()?] = regs.file[i_rs1()?] ^ (i_immed()? as u32);
         }
+        "SLLI" => {
+            regs.file[i_rd()?] = regs.file[i_rs1()?] << (i_immed()? as u32);
+        }
+        "SLRI" => {
+            regs.file[i_rd()?] = regs.file[i_rs1()?] >> (i_immed()? as u32);
+        }
+
+        // JAL-TYPE INSTRUCTIONS
+        "JAL" => {
+            let label = j_lbl()?;
+            regs.file[j_rd()?] = regs.pc as u32;
+            regs.pc = *program.labels.get(label)
+                .ok_or_else(|| format!("Could not find label {}", label))?;
+        }
 
         // LD/ST INSTRUCTIONS
         "LW" => {
             let addr = regs.file[ls_ra()?].wrapping_add(ls_offs()? as u32);
-            regs.file[ls_rd()?] = mem.read32(addr);
+            regs.file[ls_rd()?] = mem.read32(addr)?;
         }
         "SW" => {
             let addr = regs.file[ls_ra()?].wrapping_add(ls_offs()? as u32);
-            mem.write32(addr, regs.file[ls_rd()?]);
+            mem.write32(addr, regs.file[ls_rd()?])?;
         }
 
         unk => return Err(format!("Could not match operator {}", unk))
@@ -178,14 +227,23 @@ pub(crate) fn run(regs: &mut Registers, mem: &mut Memory, line: &str) -> Result<
 fn test_interpret() {
     let mut regs = Registers::new();
     let mut mem = Memory::new();
+    let mut program = Program::new();
+    program.code = vec![
+        "ADD x1, x1, x1".to_owned(),
+        "ADDI x1, x1, 1".to_owned(),
+        "LW x1, 0(x0)".to_owned()
+    ];
     regs.file[1] = 3;
     
-    run(&mut regs, &mut mem, "ADD x1, x1, x1").unwrap();
+    run(&mut regs, &mut mem, &mut program).unwrap();
     assert_eq!(regs.file[1], 6);
+    regs.pc += 1;
     
-    run(&mut regs, &mut mem, "ADDI x1, x1, 1").unwrap();
+    run(&mut regs, &mut mem, &mut program).unwrap();
     assert_eq!(regs.file[1], 7);
+    regs.pc += 1;
 
-    run(&mut regs, &mut mem, "LW x1, 0(x0)").unwrap();
+    run(&mut regs, &mut mem, &mut program).unwrap();
     assert_eq!(regs.file[1], 0);
+    regs.pc += 1;
 }
