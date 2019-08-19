@@ -12,4 +12,4 @@ target/$(TARGET)/$(PROFILE)/moesi.wasm:
 	cargo build --target $(TARGET) --$(PROFILE) 
 
 www/style.css: www/style.scss
-	scss $< > $@
+	sass $< > $@

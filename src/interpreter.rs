@@ -10,7 +10,7 @@ use crate::memory::Memory;
 pub(crate) struct Program {
     pub(crate) code: Vec<String>,
     labels: HashMap<String, usize>,
-    breakpoints: HashSet<usize>
+    pub(crate) breakpoints: HashSet<usize>
 }
 
 impl Program {
@@ -123,6 +123,7 @@ pub(crate) fn run(regs: &mut Registers, mem: &mut Memory, program: &mut Program)
     let rtype = rtype_caps.as_ref().ok_or("Could not match r-type fields: <OP> <RD>, <RS1>, <RS2>");
     let jtype = jtype_caps.as_ref().ok_or("Could not match jal-type fields: <OP> <RD>, <LABEL>");
     let itype = itype_caps.as_ref().ok_or("Could not match i-type fields: <OP> <RD>, <RS1>, <IMM>");
+    let mvtype = jtype_caps.as_ref().ok_or("Could not match mv-type fields: <OP> <RD>, <RS>");
     let lstype = lstype_caps.as_ref().ok_or("Could not match l/s-type fields: <OP> <RD>, <OFFS>(<RA>)");
 
     let r_rd  = || reg(capture_field(rtype?, 2)?);
@@ -135,6 +136,9 @@ pub(crate) fn run(regs: &mut Registers, mem: &mut Memory, program: &mut Program)
     let i_rd    = || reg(capture_field(itype?, 2)?);
     let i_rs1   = || reg(capture_field(itype?, 3)?);
     let i_immed = || immed(capture_field(itype?, 4)?);
+
+    let mv_rd    = || reg(capture_field(mvtype?, 2)?);
+    let mv_immed = || immed(capture_field(mvtype?, 3)?);
 
     let ls_rd   = || reg(capture_field(lstype?, 2)?);
     let ls_offs = || immed(capture_field(lstype?, 3)?);
@@ -149,6 +153,11 @@ pub(crate) fn run(regs: &mut Registers, mem: &mut Memory, program: &mut Program)
     }
 
     match operator? {
+        // MV-TYPE INSTRUCTIONS
+        "MV" => {
+            regs.file[mv_rd()?] = mv_immed()? as u32;
+        }
+
         // R-TYPE INSTRUCTIONS
         "ADD" => {
             regs.file[r_rd()?] = regs.file[r_rs1()?].wrapping_add(regs.file[r_rs2()?]);

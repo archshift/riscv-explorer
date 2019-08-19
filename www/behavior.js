@@ -2,6 +2,9 @@ import {
     default as init,
     makeSimstate,
     setCodeText,
+    addBreakpoint,
+    removeBreakpoint,
+    clearBreakpoints,
     runAmount,
     step,
     getRegs,
@@ -94,7 +97,7 @@ function initRegisters() {
  * Data Update Functions
  */
 
-function updateBkpts() {
+function updateBkpts(simState) {
     var row;
     var bps = "";
     for (row = 0; row < codeLines; row++) {
@@ -102,22 +105,27 @@ function updateBkpts() {
     }
     breakpoints.innerHTML = bps;
 
+    clearBreakpoints(simState);
+
     var i;
     var bps = breakpoints.getElementsByClassName("bp");
     for (i = 0; i < bps.length; i++) {
         let bpElem = bps[i];
-        bpElem.addEventListener("click", toggleBkpt);
+        bpElem.addEventListener("click", function(event) {
+            toggleBkpt(this.children[0], simState, i)
+        });
     }
 }
 
-function toggleBkpt(event) {
-    var obj = this.children[0];
+function toggleBkpt(obj, simState, lineNum) {
     switch (obj.className) {
     case "enabled":
         obj.className = "disabled";
+        removeBreakpoint(simState, lineNum);
         break;
     case "disabled":
         obj.className = "enabled";
+        addBreakpoint(simState, lineNum);
         break;
     }
 }
@@ -183,7 +191,7 @@ async function run() {
     initRegisters();
     
     codeLines = countLines(textinput.value);
-    updateBkpts();
+    updateBkpts(simState);
     
     finishLoading();
 
@@ -192,7 +200,7 @@ async function run() {
         var newRows = countLines(event.srcElement.value);
         if (newRows !== codeLines) {
             codeLines = newRows;
-            updateBkpts();
+            updateBkpts(simState);
         }
     });
 

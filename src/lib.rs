@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use wasm_bindgen::prelude::*;
 
 mod interpreter;
@@ -31,24 +33,30 @@ pub fn setCodeText(state: &mut SimState, code: &str) {
 
 #[wasm_bindgen]
 pub fn addBreakpoint(state: &mut SimState, line: usize) {
-    
+    state.program.breakpoints.insert(line);
 }
 
 #[wasm_bindgen]
 pub fn clearBreakpoints(state: &mut SimState) {
-
+    state.program.breakpoints.clear();
 }
 
 #[wasm_bindgen]
 pub fn removeBreakpoint(state: &mut SimState, line: usize) {
-
+    state.program.breakpoints.remove(&line);
 }
 
 #[wasm_bindgen]
 pub fn runAmount(state: &mut SimState, count: usize) -> bool {
-    for _ in 0..count {
+    for i in 0..count {
         if state.regs.pc >= state.program.code.len() {
             break;
+        }
+        if i != 0 {
+            let found_bp = state.program.breakpoints.get(&i).is_some();
+            if found_bp {
+                return true
+            }
         }
         if !step(state) {
             return false;
