@@ -48,6 +48,12 @@ pub fn removeBreakpoint(state: &mut SimState, line: usize) {
 
 #[wasm_bindgen]
 pub fn runAmount(state: &mut SimState, count: usize) -> bool {
+    let label_ret = interpreter::scan_labels(&mut state.program);
+    if let Err(s) = label_ret {
+        state.error = s.to_owned();
+        return false
+    }
+
     for i in 0..count {
         if state.regs.pc >= state.program.code.len() {
             break;
@@ -58,15 +64,14 @@ pub fn runAmount(state: &mut SimState, count: usize) -> bool {
                 return true
             }
         }
-        if !step(state) {
-            return false;
+        if !run_inner(state) {
+            return false
         }
     }
     true
 }
 
-#[wasm_bindgen]
-pub fn step(state: &mut SimState) -> bool {
+fn run_inner(state: &mut SimState) -> bool {
     if state.regs.pc >= state.program.code.len() {
         state.error = "Stepped over end of program!".to_owned();
         return false;
@@ -79,9 +84,13 @@ pub fn step(state: &mut SimState) -> bool {
             what);
         return false;
     }
-    state.regs.pc += 1;
 
     true
+}
+
+#[wasm_bindgen]
+pub fn step(state: &mut SimState) -> bool {
+    runAmount(state, 1)
 }
 
 #[wasm_bindgen]
